@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="utf-8" />
+<title>Room {{ room }} details</title>
+<style>
+  body{font-family:Arial;background:lightblue;margin:20px}
+  h1{text-align:center;color:#073b6b}
+  table{width:100%;border-collapse:collapse;background:white}
+  th,td{border:1px solid #ccc;padding:6px;text-align:center}
+  th{background:#0b63b3;color:white}
+  nav{text-align:center;margin-bottom:12px}
+  nav a{margin:0 8px;color:#073b6b;text-decoration:none}
+</style>
+</head>
+<body>
+  <h1>Room {{ room }} — Bookings</h1>
+  <nav>
+    <a href="/booking?lang={{ lang }}">Booking</a> |
+    <a href="/history?lang={{ lang }}">History</a>
+  </nav>
+
+  <table>
+    <tr><th>ID</th><th>Name</th><th>Check-in</th><th>Check-out</th><th>Guests</th><th>Total</th><th>Method</th><th>Pending</th></tr>
+    {% for b in bookings %}
+    <tr>
+      <td>{{ b['id'] }}</td>
+      <td>{{ b['name'] }}</td>
+      <td>{{ b['checkin'] }}</td>
+      <td>{{ b['checkout'] }}</td>
+      <td>{{ b['guests'] }}</td>
+      <td>{{ b['amount_total'] }} {{ b['currency'] }}</td>
+      <td>{{ b['method'] }}</td>
+      <td>{{ 'Yes' if b['pending']==1 else 'No' }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</body>
+</html>

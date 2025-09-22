@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="utf-8" />
+<title>History</title>
+<style>
+  body{font-family:Arial;background:lightblue;margin:20px}
+  h1{text-align:center;color:#073b6b}
+  nav{text-align:center;margin-bottom:12px}
+  nav a{margin:0 8px;color:#073b6b;text-decoration:none}
+  .search{ text-align:center;margin-bottom:12px }
+  table{width:100%;border-collapse:collapse;background:white}
+  th,td{border:1px solid #ccc;padding:6px;text-align:center}
+  th{background:#0b63b3;color:white}
+  .agoda{background:#E9DDF8}     /* purple */
+  .bookingcom{background:#DDEEFF} /* blue */
+  .f2f{background:#FFF8D6}      /* yellow */
+  .pending{background:#FBEAEA}  /* light red */
+  a.room-link{color:#0b63b3;text-decoration:underline}
+</style>
+</head>
+<body>
+  <h1>Booking History</h1>
+  <nav>
+    <a href="/booking?lang={{ lang }}">Booking</a> |
+    <a href="/history?lang={{ lang }}">History</a> |
+    <a href="/history?lang=en">EN</a> |
+    <a href="/history?lang=tr">TR</a> |
+    <a href="/history?lang=ar">AR</a>
+  </nav>
+
+  <div class="search">
+    <form method="get" action="/history">
+      <input type="hidden" name="lang" value="{{ lang }}">
+      <input type="text" name="q" placeholder="{{ translations.search }}" value="{{ query }}">
+      <button type="submit">{{ translations.search }}</button>
+    </form>
+  </div>
+
+  <table>
+    <tr>
+      <th>ID</th><th>Name</th><th>Email</th><th>Room</th><th>Guests</th>
+      <th>Check-in</th><th>Check-out</th><th>Source</th><th>Price/night</th>
+      <th>Total</th><th>Currency</th><th>Method</th><th>Notes</th><th>Time</th><th>Action</th>
+    </tr>
+    {% for r in history %}
+      {% set css = '' %}
+      {% if r['source'] == 'Agoda' %}{% set css = 'agoda' %}
+      {% elif r['source'] == 'Booking.com' %}{% set css = 'bookingcom' %}
+      {% elif r['source'] == 'Face to Face' %}{% set css = 'f2f' %}{% endif %}
+      {% if r['pending'] == 1 %}{% set css = css + ' pending' %}{% endif %}
+    <tr class="{{ css }}">
+      <td>{{ r['id'] }}</td>
+      <td><a href="/history?q={{ r['name'] }}&lang={{ lang }}" style="color:#073b6b">{{ r['name'] }}</a></td>
+      <td>{{ r['email'] }}</td>
+      <td><a class="room-link" href="/room/{{ r['room'] }}?lang={{ lang }}">{{ r['room'] }}</a></td>
+      <td>{{ r['guests'] }}</td>
+      <td>{{ r['checkin'] }}</td>
+      <td>{{ r['checkout'] }}</td>
+      <td>{{ r['source'] }}</td>
+      <td>{{ r['price_per_night'] }}</td>
+      <td>{{ r['amount_total'] }}</td>
+      <td>{{ r['currency'] }}</td>
+      <td>{{ r['method'] }}</td>
+      <td>{{ r['notes'] }}</td>
+      <td>{{ r['time'] }}</td>
+      <td>
+        <a href="/early_checkout/{{ r['id'] }}">Early Checkout</a><br>
+        {% if r['pending'] == 1 %}
+          <a href="/mark_paid/{{ r['id'] }}?method=Cash">Mark Paid (Cash)</a>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</body>
+</html>

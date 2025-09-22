@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="utf-8" />
+<title>AX HOTEL PAYMENTS</title>
+<style>
+  body{font-family:Arial;background:lightblue;margin:0;padding:0;}
+  header{padding:16px;text-align:center;color:#073b6b}
+  nav{background:#0b63b3;padding:8px;text-align:center;color:white}
+  nav a{color:white;text-decoration:none;margin:0 8px;font-weight:bold}
+  .wrap{display:flex;gap:20px;max-width:1200px;margin:20px auto;padding:10px}
+  .form-box{flex:1;background:white;padding:18px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.08)}
+  .side{width:360px;background:white;padding:18px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.08)}
+  label{display:block;margin-top:8px;font-weight:600}
+  input,select,textarea{width:100%;padding:8px;margin-top:6px;border:1px solid #ccc;border-radius:6px}
+  button.primary{background:#0b63b3;color:white;border:none;padding:10px;border-radius:6px;margin-top:12px;width:100%;font-weight:700}
+  .room-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .room{width:72px;padding:6px;border-radius:6px;text-align:center;font-weight:700;cursor:pointer}
+  .free{background:#a5d6a7}
+  .occupied{background:#ef9a9a}
+  .agoda{background:#D7C4F8} /* purple */
+  .bookingcom{background:#CFE7FF} /* blue */
+  .f2f{background:#FFF1B8} /* yellow */
+  .pending-row{background:#f8d7da}
+  .pending-box{background:#fff5f5;padding:10px;border-radius:6px;border:1px solid #ffd5d5}
+  .small-btn{display:inline-block;padding:6px 8px;border-radius:6px;background:#0b63b3;color:white;text-decoration:none;margin-top:6px}
+  .small-link{color:#0b63b3;text-decoration:underline;cursor:pointer}
+  .info{font-size:13px;color:#333;margin-top:6px}
+</style>
+</head>
+<body>
+<header><h1>AX HOTEL PAYMENTS</h1></header>
+<nav>
+  <a href="/booking?lang={{ lang }}">Booking</a> |
+  <a href="/history?lang={{ lang }}">History</a> |
+  <a href="/booking?lang=en">EN</a> |
+  <a href="/booking?lang=tr">TR</a> |
+  <a href="/booking?lang=ar">AR</a>
+</nav>
+
+<div class="wrap">
+  <div class="form-box">
+    <form method="post" id="bookForm">
+      <label>{{ translations.name }}</label>
+      <input name="name" required>
+
+      <label>{{ translations.email }}</label>
+      <input name="email" type="email" required>
+
+      <label>{{ translations.room }}</label>
+      <input name="room" required placeholder="e.g. 101">
+
+      <label>{{ translations.guests }}</label>
+      <input name="guests" type="number" min="1" max="10" value="1" required>
+
+      <label>{{ translations.checkin }}</label>
+      <input name="checkin" type="date" required>
+
+      <label>{{ translations.checkout }}</label>
+      <input name="checkout" type="date" required>
+
+      <label>{{ translations.source }} (Agoda purple, Booking.com blue, Face to Face yellow)</label>
+      <select name="source" id="sourceSelect">
+        <option value="Agoda">Agoda</option>
+        <option value="Booking.com">Booking.com</option>
+        <option value="Face to Face">Face to Face</option>
+      </select>
+
+      <label>{{ translations.price_night }} (worker writes first-night price)</label>
+      <input name="price_per_night" id="price_per_night" type="number" step="0.01" required>
+
+      <label>{{ translations.amount }} (calculated)</label>
+      <input name="amount_total" id="amount_total" type="number" step="0.01" readonly>
+
+      <label>{{ translations.currency }}</label>
+      <select name="currency">
+        <option value="TRY">TRY</option>
+        <option value="USD">USD</option>
+        <option value="EUR">EUR</option>
+      </select>
+
+      <label>{{ translations.method }}</label>
+      <select name="method" id="methodSelect">
+        <option value="Cash">Cash</option>
+        <option value="IBAN">IBAN</option>
+        <option value="Card">Card</option>
+        <option value="Pending">Pending</option>
+      </select>
+
+      <label>{{ translations.notes }}</label>
+      <textarea name="notes"></textarea>
+
+      <button class="primary" type="submit">{{ translations.submit }}</button>
+    </form>
+
+    <div style="margin-top:12px">
+      <div style="font-weight:700;margin-bottom:6px">{{ translations.bosses }}</div>
+      <a class="small-btn" href="/whatsapp/yunus"> {{ translations.yunus }} </a>
+      <a class="small-btn" href="/whatsapp/memet"> {{ translations.memet }} </a>
+      <div class="info">(Buttons open WhatsApp web with last booking. Worker must press Send.)</div>
+    </div>
+  </div>
+
+  <div class="side">
+    <h3>{{ translations.rooms }}</h3>
+
+    <div style="margin-top:8px">
+      <div class="room-grid">
+        {% for num, info in room_status.items() %}
+          {% set cls = 'free' if not info.sold else 'occupied' %}
+          {% if info.source == 'Agoda' %}{% set color_cls = 'agoda' %}
+          {% elif info.source == 'Booking.com' %}{% set color_cls = 'bookingcom' %}
+          {% elif info.source == 'Face to Face' %}{% set color_cls = 'f2f' %}
+          {% else %}{% set color_cls = '' %}{% endif %}
+          <a href="/room/{{ num }}?lang={{ lang }}" style="text-decoration:none">
+            <div class="room {{ cls }} {{ color_cls }}">
+              {{ num }}<br>
+              {{ info.bed }}<br>
+              {% if info.sold %}{{ info.from }} → {{ info.until }}{% else %}Free{% endif %}
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+
+    <h3 style="margin-top:12px">{{ translations.pending_box }}</h3>
+    <div class="pending-box">
+      <div><strong>Total pending:</strong> {{ total_pending }}</div>
+      {% if pending_rows %}
+        <ul style="padding-left:16px;margin-top:8px">
+          {% for p in pending_rows %}
+            <li>
+              {{ p['name'] }} — Room {{ p['room'] }} — {{ p['amount_total'] }} {{ p['currency'] }}
+              <div style="margin-top:6px">
+                <a class="small-link" href="/mark_paid/{{ p['id'] }}?method=Cash">Mark Paid (Cash)</a> |
+                <a class="small-link" href="/mark_paid/{{ p['id'] }}?method=Card">Mark Paid (Card)</a> |
+                <a class="small-link" href="/mark_paid/{{ p['id'] }}?method=IBAN">Mark Paid (IBAN)</a>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div style="margin-top:8px">No pending payments</div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // JS: compute nights and amount
+  function calcAmount() {
+    const ci = document.querySelector('input[name="checkin"]').value;
+    const co = document.querySelector('input[name="checkout"]').value;
+    const price = parseFloat(document.getElementById('price_per_night').value || 0);
+    if (!ci || !co) { document.getElementById('amount_total').value = ''; return; }
+    const d1 = new Date(ci);
+    const d2 = new Date(co);
+    const diff = Math.floor((d2 - d1) / (1000*60*60*24));
+    const nights = (diff > 0) ? diff : 0;
+    const total = (price * nights).toFixed(2);
+    document.getElementById('amount_total').value = total;
+  }
+  document.querySelector('input[name="checkin"]').addEventListener('change', calcAmount);
+  document.querySelector('input[name="checkout"]').addEventListener('change', calcAmount);
+  document.getElementById('price_per_night').addEventListener('input', calcAmount);
+
+  // on submit: ensure amount_total has value (server will recheck)
+  document.getElementById('bookForm').addEventListener('submit', function(e){
+    calcAmount();
+  });
+</script>
+</body>
+</html>
+
+
