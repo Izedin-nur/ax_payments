@@ -6,6 +6,7 @@ import smtplib
 from email.message import EmailMessage
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import urllib.parse   # ✅ added for encoding WhatsApp text
 
 app = Flask(__name__)
 DB = 'bookings.db'
@@ -234,26 +235,40 @@ def mark_paid(booking_id):
     db.commit()
     return redirect(url_for('booking'))
 
+# --- ✅ FIXED WhatsApp Route ---
 @app.route("/whatsapp/<string:boss>")
 def whatsapp(boss):
     db = get_db()
     row = db.execute("SELECT * FROM bookings ORDER BY id DESC LIMIT 1").fetchone()
     if not row:
         return "No booking found"
-    text = (f"AX HOTEL PAYMENTS\nName: {row['name']}\nRoom: {row['room']}\nGuests: {row['guests']}\n"
-            f"Check-in: {row['checkin']}\nCheck-out: {row['checkout']}\nTotal: {row['amount_total']} {row['currency']}\n"
-            f"Method: {row['method']}\nNotes: {row['notes']}")
+
+    text = (f"AX HOTEL PAYMENTS\n"
+            f"Name: {row['name']}\n"
+            f"email: {row['email']}\n"
+            f"Room: {row['room']}\n"
+            f"Guests: {row['guests']}\n"
+            f"Check-in: {row['checkin']}\n"
+            f"Check-out: {row['checkout']}\n"
+            f"Total: {row['amount_total']} {row['currency']}\n"
+            f"Method: {row['method']}\n"
+            f"source: {row['source']}\n"
+            f"Notes: {row['notes']}")
+
+    encoded_text = urllib.parse.quote(text)
+
     if boss == 'yunus':
         number = "+905353601136"
     else:
         number = "+905335247460"
-    url = f"https://wa.me/{number[1:]}?text={text}"
-    webbrowser.open(url)
-    return redirect(url_for('booking', lang='en'))
+
+    url = f"https://wa.me/{number[1:]}?text={encoded_text}"
+    return redirect(url)   # ✅ opens WhatsApp in the user browser
 
 if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
